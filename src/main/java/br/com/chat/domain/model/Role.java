@@ -1,4 +1,4 @@
-package br.com.chat_ia.domain.model;
+package br.com.chat.domain.model;
 
 import java.util.Arrays;
 
@@ -17,9 +17,6 @@ public enum Role {
         return value;
     }
 
-    /**
-     * Converte String para Role, útil quando receber do cliente ou da API
-     */
     public static Role fromValue(String value) {
         return Arrays.stream(Role.values())
                 .filter(role -> role.value.equalsIgnoreCase(value))

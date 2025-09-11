@@ -1,4 +1,4 @@
-package br.com.chat_ia;
+package br.com.chat;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

@@ -1,4 +1,4 @@
-package br.com.chat_ia;
+package br.com.chat;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
