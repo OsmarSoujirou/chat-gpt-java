@@ -8,6 +8,7 @@ import reactor.core.publisher.Flux;
 
 @RestController
 @RequestMapping({"chat"})
+@CrossOrigin(origins = "*")
 public class ChatController {
     private ChatbotService chatBotService;
 
@@ -15,22 +16,16 @@ public class ChatController {
         this.chatBotService = chatbotService;
     }
 
-    @GetMapping
-    public String index() {
-        return "Chat ativo ✅";
-    }
 
-    @GetMapping("/ping")
-    public String ping() {
-        return "pong 🏓";
-    }
-
-    @PostMapping(value = "/v1", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<ServerSentEvent<String>> sendQuestion(@RequestBody String question) {
-        return chatBotService.sendQuestion(question);
+    @GetMapping(value = "/v1", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<ServerSentEvent<String>> sendQuestion(@RequestParam String userId, @RequestParam String question) {
+        return chatBotService.sendQuestion(userId, question);
     };
 
-    public void loadHistory() {};
+    @GetMapping(value = "/v1/conversation", produces = MediaType.APPLICATION_JSON_VALUE)
+    public String loadHistory(@RequestParam String userId) {
+        return chatBotService.loadHistory(userId);
+    };
 
     public void clearHistory() {};
 }

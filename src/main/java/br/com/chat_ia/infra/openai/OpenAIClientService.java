@@ -1,5 +1,6 @@
 package br.com.chat_ia.infra.openai;
 
+import br.com.chat_ia.domain.model.Message;
 import com.openai.client.OpenAIClient;
 import com.openai.client.okhttp.OpenAIOkHttpClient;
 import com.openai.core.http.AsyncStreamResponse;
@@ -23,7 +24,7 @@ public class OpenAIClientService {
         this.client = OpenAIOkHttpClient.builder().apiKey(apiKey).build();
     }
 
-    public Flux<ServerSentEvent<String>> sendRequisitionChatCompletion(List<String[]> conversation, Consumer<String> onComplete) {
+    public Flux<ServerSentEvent<String>> sendRequisitionChatCompletion(List<Message> conversation, Consumer<String> onComplete) {
 
         List<ChatCompletionMessageParam> messages = conversation.stream()
                 .map(this::toMessageParam)
@@ -47,7 +48,8 @@ public class OpenAIClientService {
                     chunk.choices().forEach(choice ->
                             choice.delta().content().ifPresent(text -> {
                                 responseBuilder.append(text);
-                                sink.next(ServerSentEvent.builder(text).build());
+                                String chunkToSend = text.replaceAll("^ ", "\u00A0");
+                                sink.next(ServerSentEvent.builder(chunkToSend).build());
                             })
                     )
             );
@@ -60,30 +62,31 @@ public class OpenAIClientService {
         });
     }
 
-    private ChatCompletionMessageParam toMessageParam(String[] m) {
-        String role = m[0];
-        String content = m[1];
+    private ChatCompletionMessageParam toMessageParam(Message message) {
 
-        if (role.equalsIgnoreCase("system")) {
+
+        if (message.getRole().equalsIgnoreCase("system")) {
             return ChatCompletionMessageParam.ofSystem(
                     ChatCompletionSystemMessageParam.builder()
-                            .content(content)
+                            .content(message.getContent())
                             .build()
             );
-        } else if (role.equalsIgnoreCase("user")) {
+        } else if (message.getRole().equalsIgnoreCase("user")) {
             return ChatCompletionMessageParam.ofUser(
                     ChatCompletionUserMessageParam.builder()
-                            .content(content)
+                            .content(message.getContent())
                             .build()
             );
-        } else if (role.equalsIgnoreCase("assistant")) {
+        } else if (message.getRole().equalsIgnoreCase("assistant")) {
+            String content = message.getContent();
+            int end = Math.min(content.length(), 255); // garante que não ultrapassa
             return ChatCompletionMessageParam.ofAssistant(
                     ChatCompletionAssistantMessageParam.builder()
-                            .content(content)
+                            .content(content.substring(0, end) + (content.length() > 255 ? "..." : ""))
                             .build()
             );
         } else {
-            throw new IllegalStateException("Role desconhecida: " + role);
+            throw new IllegalStateException("Role desconhecida: " + message.getRole());
         }
     }
 }
